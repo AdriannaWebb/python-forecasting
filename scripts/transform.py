@@ -163,6 +163,7 @@ def create_monthly_business_summary(df, start_year=2010):
     """
     try:
         # Ensure dates are in datetime format
+        df = df.copy()  # Create a copy to avoid SettingWithCopyWarning
         df['date_accredited'] = pd.to_datetime(df['date_accredited'])
         if 'date_dropped' in df.columns:
             df['date_dropped'] = pd.to_datetime(df['date_dropped'])
@@ -195,22 +196,23 @@ def create_monthly_business_summary(df, start_year=2010):
         monthly_drops = drops_df.groupby('drop_month').size().reset_index(name='count')
         monthly_drops['drop_month'] = monthly_drops['drop_month'].dt.to_timestamp()
         
-        # Merge joins and drops into summary
-        summary_df = pd.merge(
-            summary_df, 
-            monthly_joins.rename(columns={'join_month': 'year_month', 'count': 'new_joins'}),
-            on='year_month', how='left'
-        )
+        # Update joins count in summary dataframe
+        for _, row in monthly_joins.iterrows():
+            month = row['join_month']
+            count = row['count']
+            # Find matching row in summary_df
+            match_idx = summary_df[summary_df['year_month'] == month].index
+            if len(match_idx) > 0:
+                summary_df.loc[match_idx[0], 'new_joins'] = count
         
-        summary_df = pd.merge(
-            summary_df,
-            monthly_drops.rename(columns={'drop_month': 'year_month', 'count': 'new_drops'}),
-            on='year_month', how='left'
-        )
-        
-        # Fill NaN values with 0
-        summary_df['new_joins'] = summary_df['new_joins'].fillna(0).astype(int)
-        summary_df['new_drops'] = summary_df['new_drops'].fillna(0).astype(int)
+        # Update drops count in summary dataframe
+        for _, row in monthly_drops.iterrows():
+            month = row['drop_month']
+            count = row['count']
+            # Find matching row in summary_df
+            match_idx = summary_df[summary_df['year_month'] == month].index
+            if len(match_idx) > 0:
+                summary_df.loc[match_idx[0], 'new_drops'] = count
         
         # Calculate active businesses for each month
         for i, row in summary_df.iterrows():

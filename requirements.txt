@@ -4,3 +4,6 @@ pymysql
 openpyxl  
 python-dotenv  
 loguru
+statsmodels
+scikit-learn
+matplotlib
