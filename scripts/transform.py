@@ -152,6 +152,7 @@ def add_date_features(df):
     except Exception as e:
         logger.error(f"Error adding date features: {e}")
         raise
+    
 def create_monthly_business_summary(df, start_year=2010):
     """
     Create a monthly summary of business data from start_year to current month

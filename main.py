@@ -24,19 +24,19 @@ def main():
         logger.info("Extracting data...")
         raw_data = extract_business()
         
-        # Transform - Monthly Summary (back to 2010)
-        logger.info("Creating monthly business summary from 2010...")
+        # Transform - Monthly Summary (back to 2000)
+        logger.info("Creating monthly business summary from 2000...")
         clean_data = clean_business_data(raw_data)
-        monthly_summary = create_monthly_business_summary(clean_data, start_year=2010)
+        monthly_summary = create_monthly_business_summary(clean_data, start_year=2000)
         
         # Save Monthly Summary
         logger.info("Saving monthly business summary...")
-        summary_file = save_monthly_summary(monthly_summary, timestamp)
+        summary_file = save_monthly_summary(monthly_summary)
         logger.info(f"Monthly summary saved to {summary_file}")
         
-        # Transform - for forecasting (using 5 years of data)
+        # Transform - for forecasting (using 7 years of data)
         logger.info("Preparing data for forecasting...")
-        filtered_data = filter_data_by_date_range(clean_data, lookback_years=5)
+        filtered_data = filter_data_by_date_range(clean_data, lookback_years=7)
         monthly_joins, monthly_drops = aggregate_monthly_data(filtered_data)
         time_series_data = create_time_series_df(monthly_joins, monthly_drops)
         time_series_data = add_date_features(time_series_data)
@@ -53,7 +53,7 @@ def main():
         
         # Save Forecast
         logger.info("Saving forecast data...")
-        forecast_file = save_forecast_data(forecast_data, timestamp)
+        forecast_file = save_forecast_data(forecast_data)
         logger.info(f"Forecast saved to {forecast_file}")
         
         logger.info("Forecast process completed successfully")

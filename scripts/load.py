@@ -24,13 +24,11 @@ def save_to_excel(df, filename, sheet_name='Forecast'):
 
 def save_forecast_data(forecast_df, timestamp=None):
     """
-    Save forecast data to Excel with timestamp in filename
+    Save forecast data to Excel with fixed filename
     """
     try:
-        if timestamp is None:
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            
-        filename = f"business_forecast_{timestamp}.xlsx"
+        # Use a fixed filename without timestamp
+        filename = "business_forecast.xlsx"
         
         # Format the DataFrame for Excel
         excel_df = forecast_df.copy()
@@ -61,13 +59,11 @@ def save_forecast_data(forecast_df, timestamp=None):
 
 def save_monthly_summary(summary_df, timestamp=None):
     """
-    Save monthly business summary to Excel
+    Save monthly business summary to Excel with fixed filename
     """
     try:
-        if timestamp is None:
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            
-        filename = f"business_monthly_summary_{timestamp}.xlsx"
+        # Use a fixed filename without timestamp
+        filename = "business_monthly_summary.xlsx"
         
         # Format the DataFrame for Excel
         excel_df = summary_df.copy()
