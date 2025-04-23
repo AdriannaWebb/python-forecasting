@@ -5,7 +5,8 @@ from scripts.extract import extract_business
 from scripts.transform import (
     clean_business_data, 
     create_monthly_business_summary,
-    prepare_summary_for_forecast
+    prepare_summary_for_forecast,
+    correct_known_data_issues  # Add this import
 )
 from scripts.forecast import generate_business_forecast_from_summary
 from scripts.load import save_forecast_data, save_monthly_summary
@@ -26,9 +27,13 @@ def main():
         clean_data = clean_business_data(raw_data)
         monthly_summary = create_monthly_business_summary(clean_data, start_year=2000)
         
+        # Apply corrections to known data issues
+        logger.info("Applying corrections to known data issues...")
+        corrected_summary = correct_known_data_issues(monthly_summary)
+        
         # Save Monthly Summary
         logger.info("Saving monthly summary...")
-        summary_file = save_monthly_summary(monthly_summary)
+        summary_file = save_monthly_summary(corrected_summary)
         logger.info(f"Monthly summary saved to {summary_file}")
         
         # Forecast using monthly summary data
@@ -37,7 +42,7 @@ def main():
         lookback_years = 5     # Use 5 years of data
         forecast_method = 'simple'  # Use simpler method
         forecast_data = generate_business_forecast_from_summary(
-            monthly_summary, 
+            corrected_summary, 
             forecast_periods=forecast_periods,
             lookback_years=lookback_years,
             method=forecast_method

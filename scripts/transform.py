@@ -266,8 +266,14 @@ def prepare_summary_for_forecast(monthly_summary_df, lookback_years=5):
         today = pd.to_datetime(datetime.now())
         cutoff_date = today - pd.DateOffset(years=lookback_years)
         
-        # Filter to recent data only
-        filtered_df = monthly_summary_df[monthly_summary_df['year_month'] >= cutoff_date].copy()
+        # Create current month first day
+        current_month_start = pd.Timestamp(year=today.year, month=today.month, day=1)
+        
+        # Filter to recent data only, excluding current month
+        filtered_df = monthly_summary_df[
+            (monthly_summary_df['year_month'] >= cutoff_date) & 
+            (monthly_summary_df['year_month'] < current_month_start)
+        ].copy()
         
         # Ensure data is sorted by date
         filtered_df = filtered_df.sort_values('year_month')
@@ -277,8 +283,75 @@ def prepare_summary_for_forecast(monthly_summary_df, lookback_years=5):
         
         logger.info(f"Prepared monthly summary for forecasting. Using data from {filtered_df['year_month'].min().strftime('%Y-%m-%d')} to {filtered_df['year_month'].max().strftime('%Y-%m-%d')}")
         logger.info(f"Total periods for forecasting: {len(filtered_df)}")
+        logger.info(f"Excluded current incomplete month ({today.strftime('%B %Y')})")
         
         return filtered_df
     except Exception as e:
         logger.error(f"Error preparing summary data for forecasting: {e}")
+        raise
+    
+def correct_known_data_issues(monthly_summary_df):
+    """
+    Apply manual corrections to known data issues
+    Currently corrects:
+    - January 2025: Drops changed from 109 to 134
+    - February 2025: Drops changed from 163 to 136
+    
+    Parameters:
+    - monthly_summary_df: DataFrame containing monthly business summary
+    
+    Returns:
+    - DataFrame with corrections applied
+    """
+    try:
+        # Make a copy to avoid modifying the original dataframe
+        corrected_df = monthly_summary_df.copy()
+        
+        # Apply corrections for January 2025
+        jan_2025_idx = corrected_df[
+            (corrected_df['year'] == 2025) & 
+            (corrected_df['month'] == 1)
+        ].index
+        
+        if len(jan_2025_idx) > 0:
+            # Original drops value
+            orig_drops = corrected_df.loc[jan_2025_idx[0], 'new_drops']
+            # Correct value
+            corrected_df.loc[jan_2025_idx[0], 'new_drops'] = 134
+            logger.info(f"Corrected January 2025 drops from {orig_drops} to 134")
+            
+            # Update active_businesses for all months after January 2025
+            # Difference between original and corrected value
+            diff = 134 - orig_drops
+            # Update all months after January 2025
+            corrected_df.loc[
+                corrected_df['year_month'] > pd.Timestamp('2025-01-01'),
+                'active_businesses'
+            ] -= diff
+        
+        # Apply corrections for February 2025
+        feb_2025_idx = corrected_df[
+            (corrected_df['year'] == 2025) & 
+            (corrected_df['month'] == 2)
+        ].index
+        
+        if len(feb_2025_idx) > 0:
+            # Original drops value
+            orig_drops = corrected_df.loc[feb_2025_idx[0], 'new_drops']
+            # Correct value
+            corrected_df.loc[feb_2025_idx[0], 'new_drops'] = 136
+            logger.info(f"Corrected February 2025 drops from {orig_drops} to 136")
+            
+            # Update active_businesses for all months after February 2025
+            # Difference between original and corrected value
+            diff = 136 - orig_drops
+            # Update all months after February 2025
+            corrected_df.loc[
+                corrected_df['year_month'] > pd.Timestamp('2025-02-01'),
+                'active_businesses'
+            ] -= diff
+        
+        return corrected_df
+    except Exception as e:
+        logger.error(f"Error correcting known data issues: {e}")
         raise
