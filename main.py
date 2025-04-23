@@ -40,12 +40,12 @@ def main():
         logger.info("Generating forecast from monthly summary...")
         forecast_periods = 12  # Forecast for 1 year
         lookback_years = 5     # Use 5 years of data
-        forecast_method = 'simple'  # Use simpler method
+        forecast_methods = ['simple', 'ets']  # Use both simple and ETS methods
         forecast_data = generate_business_forecast_from_summary(
             corrected_summary, 
             forecast_periods=forecast_periods,
             lookback_years=lookback_years,
-            method=forecast_method
+            methods=forecast_methods
         )
         
         # Save Forecast
@@ -57,6 +57,3 @@ def main():
     except Exception as e:
         logger.error(f"Error in forecast process: {e}")
         raise
-
-if __name__ == "__main__":
-    main()
