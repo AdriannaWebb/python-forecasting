@@ -156,6 +156,7 @@ def generate_business_forecast_from_summary(monthly_summary_df, forecast_periods
         logger.error(f"Error generating business forecast from summary: {e}")
         raise
 
+# Fix for the ETS forecasting function
 def generate_ets_forecast(data_df, forecast_periods=12):
     """
     Generate forecasts using exponential smoothing (ETS)
@@ -193,7 +194,7 @@ def generate_ets_forecast(data_df, forecast_periods=12):
                         seasonal_periods=s,
                         trend='add',
                         seasonal='add',
-                        damped=True
+                        damped_trend=True  # Updated to use damped_trend instead of damped
                     ).fit(optimized=True)
                     
                     # Get in-sample predictions
@@ -216,11 +217,12 @@ def generate_ets_forecast(data_df, forecast_periods=12):
                 join_series,
                 trend='add',
                 seasonal=None,
-                damped=True
+                damped_trend=True  # Updated to use damped_trend instead of damped
             ).fit(optimized=True)
         
         # Generate forecasts for joins
-        join_forecast = best_joins_model.forecast(forecast_periods).values
+        # FIX: Remove .values since forecast() already returns a numpy array
+        join_forecast = best_joins_model.forecast(forecast_periods)
         
         # Train ETS model for drops
         drop_series = data_df['new_drops'].values
@@ -239,7 +241,7 @@ def generate_ets_forecast(data_df, forecast_periods=12):
                         seasonal_periods=s,
                         trend='add',
                         seasonal='add',
-                        damped=True
+                        damped_trend=True  # Updated to use damped_trend instead of damped
                     ).fit(optimized=True)
                     
                     # Get in-sample predictions
@@ -262,11 +264,12 @@ def generate_ets_forecast(data_df, forecast_periods=12):
                 drop_series,
                 trend='add',
                 seasonal=None,
-                damped=True
+                damped_trend=True  # Updated to use damped_trend instead of damped
             ).fit(optimized=True)
         
         # Generate forecasts for drops
-        drop_forecast = best_drops_model.forecast(forecast_periods).values
+        # FIX: Remove .values since forecast() already returns a numpy array
+        drop_forecast = best_drops_model.forecast(forecast_periods)
         
         # Round to integers
         join_forecast = np.round(join_forecast).astype(int)
@@ -283,4 +286,4 @@ def generate_ets_forecast(data_df, forecast_periods=12):
         logger.error(f"Error generating ETS forecast: {str(e)}")
         import traceback
         logger.error(traceback.format_exc())
-        raise   
+        raise
