@@ -245,3 +245,40 @@ def create_monthly_business_summary(df, start_year=2010):
     except Exception as e:
         logger.error(f"Error creating monthly business summary: {e}")
         raise
+
+def prepare_summary_for_forecast(monthly_summary_df, lookback_years=5):
+    """
+    Filter and prepare monthly summary data for forecasting
+    
+    Parameters:
+    - monthly_summary_df: DataFrame containing monthly business summary
+    - lookback_years: Number of years of data to use for forecasting
+    
+    Returns:
+    - DataFrame ready for forecasting
+    """
+    try:
+        # Convert year_month to datetime if it's not already
+        if not pd.api.types.is_datetime64_any_dtype(monthly_summary_df['year_month']):
+            monthly_summary_df['year_month'] = pd.to_datetime(monthly_summary_df['year_month'])
+        
+        # Calculate cutoff date for lookback period
+        today = pd.to_datetime(datetime.now())
+        cutoff_date = today - pd.DateOffset(years=lookback_years)
+        
+        # Filter to recent data only
+        filtered_df = monthly_summary_df[monthly_summary_df['year_month'] >= cutoff_date].copy()
+        
+        # Ensure data is sorted by date
+        filtered_df = filtered_df.sort_values('year_month')
+        
+        # Reset index
+        filtered_df = filtered_df.reset_index(drop=True)
+        
+        logger.info(f"Prepared monthly summary for forecasting. Using data from {filtered_df['year_month'].min().strftime('%Y-%m-%d')} to {filtered_df['year_month'].max().strftime('%Y-%m-%d')}")
+        logger.info(f"Total periods for forecasting: {len(filtered_df)}")
+        
+        return filtered_df
+    except Exception as e:
+        logger.error(f"Error preparing summary data for forecasting: {e}")
+        raise

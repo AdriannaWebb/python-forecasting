@@ -4,13 +4,10 @@ from datetime import datetime
 from scripts.extract import extract_business
 from scripts.transform import (
     clean_business_data, 
-    filter_data_by_date_range,
-    aggregate_monthly_data, 
-    create_time_series_df,
-    add_date_features,
-    create_monthly_business_summary
+    create_monthly_business_summary,
+    prepare_summary_for_forecast
 )
-from scripts.forecast import generate_business_forecast
+from scripts.forecast import generate_business_forecast_from_summary
 from scripts.load import save_forecast_data, save_monthly_summary
 from scripts.logging_setup import logger
 
@@ -25,29 +22,24 @@ def main():
         raw_data = extract_business()
         
         # Transform - Monthly Summary (back to 2000)
-        logger.info("Creating monthly business summary from 2000...")
+        logger.info("Creating monthly business summary...")
         clean_data = clean_business_data(raw_data)
         monthly_summary = create_monthly_business_summary(clean_data, start_year=2000)
         
         # Save Monthly Summary
-        logger.info("Saving monthly business summary...")
+        logger.info("Saving monthly summary...")
         summary_file = save_monthly_summary(monthly_summary)
         logger.info(f"Monthly summary saved to {summary_file}")
         
-        # Transform - for forecasting (using 7 years of data)
-        logger.info("Preparing data for forecasting...")
-        filtered_data = filter_data_by_date_range(clean_data, lookback_years=7)
-        monthly_joins, monthly_drops = aggregate_monthly_data(filtered_data)
-        time_series_data = create_time_series_df(monthly_joins, monthly_drops)
-        time_series_data = add_date_features(time_series_data)
-        
-        # Forecast
-        logger.info("Generating forecast...")
+        # Forecast using monthly summary data
+        logger.info("Generating forecast from monthly summary...")
         forecast_periods = 12  # Forecast for 1 year
-        forecast_method = 'ensemble'  # Use ensemble of methods
-        forecast_data = generate_business_forecast(
-            time_series_data, 
+        lookback_years = 5     # Use 5 years of data
+        forecast_method = 'simple'  # Use simpler method
+        forecast_data = generate_business_forecast_from_summary(
+            monthly_summary, 
             forecast_periods=forecast_periods,
+            lookback_years=lookback_years,
             method=forecast_method
         )
         
