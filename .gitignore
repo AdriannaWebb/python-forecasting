@@ -3,7 +3,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 .env
-output/
+.xlsx
+*.xlsx
 
 
 # C extensions
